@@ -23,3 +23,20 @@ parser.add_argument('--reward_k', type=float, default=10.0, help='Reward Functio
 # Setting a default device, can be overridden if needed.
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 args = parser.parse_args()
+
+# ==============================================================================
+# 2. MODEL AND AGENT DEFINITIONS
+# ==============================================================================
+
+# --- Q-Network Definition ---
+class QNetwork(nn.Module):
+    def __init__(self, input_size, output_size, hidden_dim=128):
+        super(QNetwork, self).__init__()
+        self.fc1 = nn.Linear(input_size, hidden_dim)
+        self.fc2 = nn.Linear(hidden_dim, hidden_dim)
+        self.fc3 = nn.Linear(hidden_dim, output_size)
+
+    def forward(self, x):
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        return self.fc3(x)
