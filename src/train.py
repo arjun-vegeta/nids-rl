@@ -40,3 +40,32 @@ class QNetwork(nn.Module):
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         return self.fc3(x)
+
+# --- High-Performance NumPy Replay Buffer ---
+Experience = namedtuple("Experience", field_names=["state", "action", "reward", "next_state", "weight"])
+
+class ReplayMemory:
+    def __init__(self, capacity):
+        self.capacity = capacity
+        self.position = 0
+        self.current_size = 0
+        self.memory = np.empty(self.capacity, dtype=object)
+
+    def push(self, *args):
+        self.memory[self.position] = Experience(*args)
+        self.position = (self.position + 1) % self.capacity
+        self.current_size = min(self.current_size + 1, self.capacity)
+
+    def sample(self, batch_size):
+        indices = np.random.choice(self.current_size, batch_size, replace=False)
+        return self.memory[indices]
+
+    def __len__(self):
+        return self.current_size
+
+# --- Corrected Custom Weighted MSE Loss Function ---
+def weighted_mse_loss(q_values, target_q_values, weights):
+    error = q_values - target_q_values
+    weighted_error = error * weights
+    loss = weighted_error.pow(2)
+    return loss.mean()
