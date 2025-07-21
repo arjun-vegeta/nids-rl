@@ -69,3 +69,32 @@ def weighted_mse_loss(q_values, target_q_values, weights):
     weighted_error = error * weights
     loss = weighted_error.pow(2)
     return loss.mean()
+
+# --- Upgraded DQN Agent Class with Target Network ---
+class DQNAgent:
+    def __init__(self, state_dim, action_dim, replay_buffer_size, batch_size, gamma, lr, device, soft_update, tau, network_sync_rate):
+        self.state_dim = state_dim
+        self.action_dim = action_dim
+        self.device = device
+        self.gamma = gamma
+        self.batch_size = batch_size
+        self.soft_update = soft_update
+        self.tau = tau
+        self.network_sync_rate = network_sync_rate
+        
+        self.memory = ReplayMemory(replay_buffer_size)
+        
+        self.policy_net = QNetwork(state_dim, action_dim).to(self.device)
+        self.target_net = QNetwork(state_dim, action_dim).to(self.device)
+        self.target_net.load_state_dict(self.policy_net.state_dict())
+        self.target_net.eval()
+
+        self.optimizer = optim.Adam(self.policy_net.parameters(), lr=lr)
+        self.train_step_counter = 0
+
+    def select_action(self, state, epsilon):
+        if random.random() > epsilon:
+            with torch.no_grad():
+                return self.policy_net(state).max(1)[1].view(1, 1)
+        else:
+            return torch.tensor([[random.randrange(self.action_dim)]], device=self.device, dtype=torch.long)
