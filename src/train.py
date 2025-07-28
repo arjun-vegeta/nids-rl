@@ -98,3 +98,49 @@ class DQNAgent:
                 return self.policy_net(state).max(1)[1].view(1, 1)
         else:
             return torch.tensor([[random.randrange(self.action_dim)]], device=self.device, dtype=torch.long)
+
+    def train(self):
+        if len(self.memory) < self.batch_size:
+            return None
+
+        sampled_experiences = self.memory.sample(self.batch_size)
+        batch = Experience(*zip(*sampled_experiences))
+
+        state_batch = torch.cat([s.unsqueeze(0) for s in batch.state]).to(self.device)
+        action_batch = torch.cat(batch.action).to(self.device)
+        reward_batch = torch.tensor(batch.reward, device=self.device, dtype=torch.float)
+        weights_batch = torch.tensor(batch.weight, device=self.device, dtype=torch.float).unsqueeze(1)
+        next_state_batch = torch.cat([s.unsqueeze(0) for s in batch.next_state]).to(self.device)
+
+        q_values = self.policy_net(state_batch).gather(1, action_batch)
+        
+        with torch.no_grad():
+            next_q_values = self.target_net(next_state_batch).max(1)[0]
+        
+        target_q_values_vec = reward_batch + (self.gamma * next_q_values)
+        full_target_q_values = self.policy_net(state_batch).clone().detach()
+        full_target_q_values.scatter_(1, action_batch, target_q_values_vec.unsqueeze(1))
+        
+        loss = weighted_mse_loss(self.policy_net(state_batch), full_target_q_values, weights_batch)
+
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+        
+        self.train_step_counter += 1
+        
+        # --- Conditionally update the target network ---
+        if self.soft_update:
+            # Soft update (Polyak averaging)
+            target_net_state_dict = self.target_net.state_dict()
+            policy_net_state_dict = self.policy_net.state_dict()
+            for key in policy_net_state_dict:
+                target_net_state_dict[key] = policy_net_state_dict[key]*self.tau + target_net_state_dict[key]*(1-self.tau)
+            self.target_net.load_state_dict(target_net_state_dict)
+        else:
+            # Hard update
+            if self.train_step_counter % self.network_sync_rate == 0:
+                self.target_net.load_state_dict(self.policy_net.state_dict())
+                print(f"Agent's policy has been copied to target.")
+
+        return loss.item()
