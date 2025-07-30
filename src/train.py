@@ -144,3 +144,23 @@ class DQNAgent:
                 print(f"Agent's policy has been copied to target.")
 
         return loss.item()
+        
+# ==============================================================================
+# 3. PLOTTING FUNCTION
+# ==============================================================================
+def plot_loss_curves(history, save_dir):
+    print("\n--- Generating Loss Curves ---")
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+        
+    plt.figure(figsize=(12, 6))
+    plt.plot(history)
+    plt.title("Training Loss Curve for neural network")
+    plt.xlabel("Training Steps")
+    plt.ylabel("Loss")
+    plt.grid(True)
+    
+    filename = os.path.join(save_dir, 'loss_curve_neural_network.png')
+    plt.savefig(filename)
+    plt.close()
+    print(f"Saved loss curve for neural network to {filename}")
