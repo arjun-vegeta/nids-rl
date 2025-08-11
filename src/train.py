@@ -164,3 +164,41 @@ def plot_loss_curves(history, save_dir):
     plt.savefig(filename)
     plt.close()
     print(f"Saved loss curve for neural network to {filename}")
+
+# ==============================================================================
+# 4. MAIN EXECUTION BLOCK
+# ==============================================================================
+if __name__ == "__main__":
+    
+    # --- GPU Configuration & Timestamped Folder Setup ---
+    if torch.cuda.is_available():
+        print(f"Using GPU: {torch.cuda.get_device_name(device)}")
+    else:
+        print("CUDA not available. Using CPU.")
+
+    timestamp = datetime.now().strftime('%d-%m-%Y_%H:%M:%S')
+    
+    # Directory for saving models
+    model_run_folder = f"training_{timestamp}"
+    model_save_path = os.path.join('saved_models', model_run_folder)
+    if not os.path.exists(model_save_path):
+        os.makedirs(model_save_path)
+    print(f"Models for this run will be saved in: {model_save_path}")
+
+    # Directory for saving evaluation plots
+    eval_run_folder = f"evaluating_{timestamp}"
+    plot_save_path = os.path.join('evaluate_models', eval_run_folder)
+    if not os.path.exists(plot_save_path):
+        os.makedirs(plot_save_path)
+    print(f"Evaluation plots for this run will be saved in: {plot_save_path}")
+
+    # --- Data Loading and Subsetting ---
+    print("Loading preprocessed data...")
+    X_train_tensor = torch.tensor(np.load('processed_data/X_train.npy'), dtype=torch.float32)
+    y_train_tensor = torch.tensor(np.load('processed_data/y_train.npy'), dtype=torch.long)
+    print(f"Using {len(X_train_tensor)} samples for training.")
+    
+    with open('processed_data/label_mapping.json', 'r') as f:
+        label_mapping = json.load(f)
+    rev_label_mapping = {v: k for k, v in label_mapping.items()}
+    attack_class_indices = [v for k,v in label_mapping.items() if k != 'BENIGN']
