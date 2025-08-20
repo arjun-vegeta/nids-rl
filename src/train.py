@@ -202,3 +202,64 @@ if __name__ == "__main__":
         label_mapping = json.load(f)
     rev_label_mapping = {v: k for k, v in label_mapping.items()}
     attack_class_indices = [v for k,v in label_mapping.items() if k != 'BENIGN']
+
+    # --- Hyperparameters ---
+    soft_update = True
+    N_EPISODES = args.episodes
+    TRAINING_STEPS_PER_EPISODE = args.training_steps
+    REPLAY_BUFFER_SIZE = math.ceil(len(X_train_tensor) * 1.5)
+    MINIBATCH_SIZE = args.minibatch
+    LEARNING_RATE = 0.01
+    GAMMA = 0.01
+    REWARD_K = args.reward_k
+    NETWORK_SYNC_RATE = 1000
+    TAU = 0.005
+    EPS_START = 1.0
+    EPS_MIN = 0.01
+    EPS_DECAY = 0.95
+    
+    # Save hyperparameters to a JSON file
+    hyperparameters = {
+        "N_EPISODES": N_EPISODES,
+        "TRAINING_STEPS_PER_EPISODE": TRAINING_STEPS_PER_EPISODE,
+        "SUBSET_SIZE": len(X_train_tensor),
+        "REPLAY_BUFFER_SIZE": REPLAY_BUFFER_SIZE,
+        "MINIBATCH_SIZE": MINIBATCH_SIZE,
+        "LEARNING_RATE": LEARNING_RATE,
+        "GAMMA": GAMMA,
+        "REWARD_K": REWARD_K,
+        "NETWORK_SYNC_RATE": NETWORK_SYNC_RATE,
+        "TAU": TAU,
+        "EPS_START": EPS_START,
+        "EPS_MIN": EPS_MIN,
+        "EPS_DECAY_PER_STEP": EPS_DECAY,
+        "SOFT_UPDATE": soft_update
+    }
+    hyperparameters_path = os.path.join(model_save_path, 'hyperparameters.json')
+    with open(hyperparameters_path, 'w') as f: json.dump(hyperparameters, f, indent=4)
+    print(f"Hyperparameters saved to {hyperparameters_path}")
+
+    print("--- Initializing Neural Network ---")
+    n_features = X_train_tensor.shape[1]
+    n_actions = 2
+
+    # Initialise Loss logging
+    loss_history = []
+
+    # ==========================================================================
+    # NEURAL NETWORK TRAINING (OFFLINE)
+    # ==========================================================================
+    print("\n--- Starting Neural Network Training (Offline) ---")
+
+    neural_net = DQNAgent(
+        state_dim=n_features,
+        action_dim=n_actions,
+        replay_buffer_size=REPLAY_BUFFER_SIZE,
+        batch_size=MINIBATCH_SIZE,
+        gamma=GAMMA,
+        lr=LEARNING_RATE,
+        device=device,
+        soft_update=soft_update,
+        tau=TAU,
+        network_sync_rate=NETWORK_SYNC_RATE
+    )
