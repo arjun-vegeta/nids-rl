@@ -263,3 +263,58 @@ if __name__ == "__main__":
         tau=TAU,
         network_sync_rate=NETWORK_SYNC_RATE
     )
+
+    epsilon = EPS_START
+    for i_episode in range(N_EPISODES):
+        print(f"\n--- Neural Network Training Episode {i_episode+1}/{N_EPISODES} ---")
+        
+        # LOGGING CHANGE: Replaced tqdm with a standard loop and periodic logging.
+        print(f"Populating replay buffer with {len(X_train_tensor)} samples...")
+        total_samples = len(X_train_tensor)
+        # Log progress every 10%
+        log_interval_samples = max(1, total_samples // 10) 
+        
+        for i in range(total_samples):
+            state, true_label = X_train_tensor[i], y_train_tensor[i].item()
+            action_tensor = neural_net.select_action(state.unsqueeze(0).to(device), epsilon)
+            # reward = 1.0 if action_tensor.item() == true_label else -1.0
+            
+            
+            if true_label == 0:
+                reward = 1.0 if action_tensor.item() == true_label else -1.0
+            else:
+                reward = REWARD_K if action_tensor.item() == true_label else -REWARD_K
+            
+            
+            weight = abs(reward)
+            
+            #true_label_map = "Malicious" if true_label == 1 else "BENIGN"
+            #action_tensor_map = "Malicious" if action_tensor.item() == 1 else "BENIGN"
+            #print(f"True label is {true_label_map} but predicted {action_tensor_map} and got reward {reward} with weight {weight}")
+            neural_net.memory.push(state, action_tensor, reward, state, weight)
+            
+            # Print progress at specified intervals
+            if (i + 1) % log_interval_samples == 0:
+                print(f"  Buffer population: {(i + 1)} / {total_samples} samples added ({(i + 1) * 100 / total_samples:.0f}%)")
+
+        print("\nBuffer population complete. Starting training steps for this episode.")
+        
+        # LOGGING CHANGE: Replaced tqdm with a standard loop and periodic logging.
+        # Log progress every 10%
+        log_interval_steps = max(1, TRAINING_STEPS_PER_EPISODE // 10)
+
+        for step in range(TRAINING_STEPS_PER_EPISODE):
+            loss = neural_net.train()
+            if loss is not None:
+                loss_history.append(loss)
+            
+            # Print progress at specified intervals
+            if (step + 1) % log_interval_steps == 0:
+                print(f"  Training step: {(step + 1)} / {TRAINING_STEPS_PER_EPISODE} completed.")
+        
+        epsilon = max(EPS_MIN, epsilon * EPS_DECAY)
+        print(f"\nEpsilon Value for next episode is {epsilon} \n")
+
+        # LOGGING CHANGE: Added end-of-episode timestamp as requested.
+        end_time_str = datetime.now().strftime('%H:%M:%S_%d_%B')
+        print(f"*** Episode {i_episode+1} ended at {end_time_str} ***")
