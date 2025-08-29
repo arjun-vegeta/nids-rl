@@ -318,3 +318,17 @@ if __name__ == "__main__":
         # LOGGING CHANGE: Added end-of-episode timestamp as requested.
         end_time_str = datetime.now().strftime('%H:%M:%S_%d_%B')
         print(f"*** Episode {i_episode+1} ended at {end_time_str} ***")
+
+
+    print("\n--- Neural Network Training Complete ---")
+
+    # --- Saving Decider Model ---
+    print("\n--- Saving Decider Agent Model ---")
+    save_path = os.path.join(model_save_path, 'neural_net.pt')
+    torch.save(neural_net.policy_net.state_dict(), save_path)
+    print(f"Saved neural network model to {save_path}")
+    
+    print("\n--- ALL TRAINING COMPLETE ---")
+
+    # --- Generate and Save Loss Curves ---
+    plot_loss_curves(loss_history, plot_save_path)
