@@ -45,3 +45,33 @@ class DQNAgent:
     def __init__(self, state_dim, action_dim, device):
         self.device = device
         self.policy_net = QNetwork(state_dim, action_dim).to(self.device)
+
+# ==============================================================================
+# 2. MAIN EXECUTION BLOCK
+# ==============================================================================
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="MARL-IDS Evaluation Script")
+    parser.add_argument('--folder_name', type=str, required=True, help='Folder name to evaluate models from.')
+    args = parser.parse_args()
+
+    device = 'cuda:0'
+    
+    # --- 1. Setup and Initialization ---
+    print("--- 1. Initializing Setup ---")
+    if torch.cuda.is_available():
+        print(f"Using GPU: {torch.cuda.get_device_name()}")
+    else:
+        device = torch.device("cpu")
+        print("CUDA not available. Using CPU.")
+
+    #Folder name we are pulling models from
+    run_folder_name = "_" + args.folder_name
+
+    #Create input directory for plots
+    input_dir = os.path.join('saved_models/', 'training' + run_folder_name)
+
+    # Create output directory for plots
+    
+    output_dir = os.path.join('evaluate_models/', 'evaluating' + run_folder_name)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
