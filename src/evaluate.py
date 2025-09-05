@@ -75,3 +75,30 @@ if __name__ == "__main__":
     output_dir = os.path.join('evaluate_models/', 'evaluating' + run_folder_name)
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
+
+    # Load test data and label mapping
+    X_test_tensor = torch.tensor(np.load('processed_data/X_test.npy'), dtype=torch.float32)
+    y_test = np.load('processed_data/y_test.npy')
+    with open('processed_data/label_mapping.json', 'r') as f:
+        label_mapping = json.load(f)
+    
+    rev_label_mapping = {v: k for k, v in label_mapping.items()}
+    class_names = list(label_mapping.keys())
+    n_features = X_test_tensor.shape[1]
+    n_actions = 2
+    n_classes = len(class_names)
+
+    # subset_size = 50000
+    # X_test_tensor = X_test_tensor[:subset_size]
+    # y_test = y_test[:subset_size]
+    # print(f"Using a subset of the data for evaluating: {len(X_test_tensor)} samples.")
+
+    # --- 2. Initialize Architectures and Load Trained Models ---
+    print(f"\n--- 2. Loading Trained Models from this directory {input_dir} ---")
+
+    # Load Decider Agent
+    neural_net_loaded = DQNAgent(state_dim=n_features, action_dim=n_actions, device=device)
+    load_path = os.path.join(input_dir, 'neural_net.pt')
+    neural_net_loaded.policy_net.load_state_dict(torch.load(load_path, map_location=device))
+    neural_net_loaded.policy_net.eval()
+    print("Loaded neural network.")
