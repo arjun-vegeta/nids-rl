@@ -102,3 +102,25 @@ if __name__ == "__main__":
     neural_net_loaded.policy_net.load_state_dict(torch.load(load_path, map_location=device))
     neural_net_loaded.policy_net.eval()
     print("Loaded neural network.")
+
+    # --- 3. Generate Predictions on the Test Set ---
+    print("\n--- 3. Generating Predictions ---")
+    predictions = []
+    with torch.no_grad():
+        for i in tqdm(range(len(X_test_tensor)), desc="Evaluating"):
+            state = X_test_tensor[i].unsqueeze(0).to(device)
+            q_values = neural_net_loaded.policy_net(state)
+            prediction = q_values.argmax(1).item()
+            predictions.append(prediction)
+    
+    y_pred = np.array(predictions)
+
+    # --- 4. Calculate and Display Metrics in Console ---
+    print("\n--- 4. Performance Metrics ---")
+    accuracy = accuracy_score(y_test, y_pred)
+    print(f"\nOverall Accuracy: {accuracy:.4f}\n")
+
+    labels = list(label_mapping.values())
+    report_str = classification_report(y_test, y_pred, labels=labels, target_names=class_names, digits=3, zero_division=0)
+    print("Classification Report:")
+    print(report_str)
