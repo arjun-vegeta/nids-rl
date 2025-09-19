@@ -124,3 +124,50 @@ if __name__ == "__main__":
     report_str = classification_report(y_test, y_pred, labels=labels, target_names=class_names, digits=3, zero_division=0)
     print("Classification Report:")
     print(report_str)
+
+    # --- Save Combined Metrics to a Single IMAGE File ---
+
+    # 1. Combine all the text you want to display into a single string.
+    full_report_text = (
+        f"Overall Accuracy\n"
+        f"================\n"
+        f"{accuracy:.4f}\n\n"
+        f"Classification Report\n"
+        f"======================\n"
+        f"{report_str}"
+    )
+
+    # 2. Create a figure to render the text on.
+    # We can adjust figsize to make sure the text fits. (width, height) in inches.
+    fig, ax = plt.subplots(figsize=(8, 6))
+
+    # 3. Hide the axes and grid, as we only want the text.
+    ax.axis('off')
+
+    # 4. Render the text.
+    # `ha='left'` and `va='top'` align the text to the top-left.
+    # `family='monospace'` is CRUCIAL to keep the report columns aligned.
+    ax.text(0.01, 0.99, full_report_text, transform=ax.transAxes,
+            fontdict={'family': 'monospace', 'size': 10},
+            ha='left', va='top')
+
+    # 5. Save the figure as an image.
+    # `bbox_inches='tight'` crops the saved image to the content.
+    image_file_path = os.path.join(output_dir, 'performance_metrics.png')
+    plt.savefig(image_file_path, bbox_inches='tight', dpi=300)
+    plt.close() # Close the figure to free up memory
+
+    print(f"-> Performance metrics report saved as an image to: {image_file_path}\n")
+    
+    # This is for saving performance metrics as .txt file
+    """report_file_path = os.path.join(output_dir, 'performance_metrics.txt')
+    with open(report_file_path, 'w') as f:
+        # Write the Overall Accuracy section
+        f.write("Overall Accuracy\n")
+        f.write("================\n")
+        f.write(f"{accuracy:.4f}\n\n")  # Add extra newlines for spacing
+        
+        # Write the Classification Report section
+        f.write("Classification Report\n")
+        f.write("======================\n")
+        f.write(report_str)"""
