@@ -171,3 +171,38 @@ if __name__ == "__main__":
         f.write("Classification Report\n")
         f.write("======================\n")
         f.write(report_str)"""
+
+    # --- 5. Generate and Save Plots ---
+    print(f"\n--- 5. Generating and Saving Plots to '{output_dir}' Directory ---")
+
+    # Plot 1: Confusion Matrix
+    cm = confusion_matrix(y_test, y_pred)
+    plt.figure(figsize=(15, 12))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=class_names, yticklabels=class_names)
+    plt.title('Confusion Matrix', fontsize=20)
+    plt.ylabel('True Label', fontsize=15)
+    plt.xlabel('Predicted Label', fontsize=15)
+    plt.xticks(rotation=45, ha='right')
+    plt.yticks(rotation=0)
+    plt.tight_layout()
+    plt.savefig(os.path.join(output_dir, 'confusion_matrix.png'))
+    plt.close()
+    print("Saved confusion_matrix.png")
+
+    # Plot 2: Per-Class Performance Bar Chart
+    report_dict = classification_report(y_test, y_pred, labels=labels, target_names=class_names, output_dict=True, zero_division=0)
+    metrics_df = pd.DataFrame(report_dict).transpose()
+    metrics_df = metrics_df.drop(['accuracy', 'macro avg', 'weighted avg'])
+    
+    metrics_df[['precision', 'recall', 'f1-score']].plot(kind='bar', figsize=(18, 7), width=0.8)
+    plt.title('Per-Class Performance Metrics', fontsize=20)
+    plt.xlabel('Attack Class', fontsize=15)
+    plt.ylabel('Score', fontsize=15)
+    plt.xticks(rotation=45, ha='right')
+    plt.ylim(0, 1.1)
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.legend(loc='upper right')
+    plt.tight_layout()
+    plt.savefig(os.path.join(output_dir, 'class_metrics_comparison.png'))
+    plt.close()
+    print("Saved class_metrics_comparison.png")
