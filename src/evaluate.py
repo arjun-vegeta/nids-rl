@@ -206,3 +206,35 @@ if __name__ == "__main__":
     plt.savefig(os.path.join(output_dir, 'class_metrics_comparison.png'))
     plt.close()
     print("Saved class_metrics_comparison.png")
+
+    # Plot 3: False Positive Rate (FPR) Bar Chart
+    tn = cm.sum() - (cm.sum(axis=0) + cm.sum(axis=1) - np.diag(cm))
+    fp = cm.sum(axis=0) - np.diag(cm)
+    fpr = fp / (fp + tn)
+    
+    plt.figure(figsize=(18, 7))
+    sns.barplot(x=class_names, y=fpr, palette='viridis')
+    plt.title('False Positive Rate (FPR) per Class', fontsize=20)
+    plt.xlabel('Class', fontsize=15)
+    plt.ylabel('FPR', fontsize=15)
+    plt.xticks(rotation=45, ha='right')
+    plt.tight_layout()
+    plt.savefig(os.path.join(output_dir, 'false_positive_rate.png'))
+    plt.close()
+    print("Saved false_positive_rate.png")
+
+    # Plot 4: Test Set Class Distribution Chart
+    class_counts = pd.Series(y_test).map(rev_label_mapping).value_counts()
+    plt.figure(figsize=(18, 7))
+    sns.barplot(x=class_counts.index, y=class_counts.values, palette='plasma')
+    plt.title('Test Set Class Distribution', fontsize=20)
+    plt.xlabel('Class', fontsize=15)
+    plt.ylabel('Number of Samples', fontsize=15)
+    plt.xticks(rotation=45, ha='right')
+    plt.yscale('log')
+    plt.tight_layout()
+    plt.savefig(os.path.join(output_dir, 'test_set_distribution.png'))
+    plt.close()
+    print("Saved test_set_distribution.png")
+
+    print("\n--- Evaluation Complete ---")
