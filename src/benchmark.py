@@ -27,3 +27,23 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.neural_network import MLPClassifier
 from lightgbm import LGBMClassifier
+
+# ==============================================================================
+# PLOTTING HELPER FUNCTIONS
+# We define these once to reuse them for every model
+# ==============================================================================
+
+def save_confusion_matrix(y_true, y_pred, model_name, class_names, model_output_dir):
+    """Generates and saves a confusion matrix heatmap."""
+    cm = confusion_matrix(y_true, y_pred)
+    plt.figure(figsize=(15, 12))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=class_names, yticklabels=class_names)
+    plt.title(f'{model_name} - Confusion Matrix', fontsize=20)
+    plt.ylabel('True Label', fontsize=15)
+    plt.xlabel('Predicted Label', fontsize=15)
+    plt.xticks(rotation=45, ha='right')
+    plt.yticks(rotation=0)
+    plt.tight_layout()
+    # Save with a simpler name inside the model's folder
+    plt.savefig(os.path.join(model_output_dir, 'confusion_matrix.png'))
+    plt.close()
