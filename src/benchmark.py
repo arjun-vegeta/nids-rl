@@ -82,3 +82,43 @@ def save_fpr_barchart(cm, model_name, class_names, model_output_dir):
     plt.tight_layout()
     plt.savefig(os.path.join(model_output_dir, 'false_positive_rate.png'))
     plt.close()
+
+# ==============================================================================
+# MAIN EXECUTION BLOCK
+# ==============================================================================
+if __name__ == "__main__":
+    
+    # --- NEW: Create timestamped parent folder ---
+    timestamp = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
+    parent_output_dir = f"evaluate_models/evaluating_models_{timestamp}"
+    os.makedirs(parent_output_dir, exist_ok=True)
+    print(f"All evaluation results will be saved in: {parent_output_dir}")
+
+    # --- 2. Load Data ---
+    # Load the *exact same* data splits as the RL agent
+    print("Loading preprocessed data...")
+    X_train = np.load('processed_data/X_train.npy')
+    y_train = np.load('processed_data/y_train.npy')
+    X_test = np.load('processed_data/X_test.npy')
+    y_test = np.load('processed_data/y_test.npy')
+    
+    with open('processed_data/label_mapping.json', 'r') as f:
+        label_mapping = json.load(f)
+    class_names = list(label_mapping.keys())
+    rev_label_mapping = {v: k for k, v in label_mapping.items()}
+
+    print(f"Benchmarking on {len(X_train)} training samples and {len(X_test)} testing samples.")
+
+    # --- 4. Define Models ---
+    # A dictionary of models to train and evaluate
+    models = {
+        "LogisticRegression": LogisticRegression(max_iter=1000, n_jobs=-1, random_state=42),
+        "GaussianNB": GaussianNB(),
+        "KNeighborsClassifier": KNeighborsClassifier(n_jobs=-1),
+        "LinearSVC": LinearSVC(max_iter=1000, dual=False, random_state=42),
+        "DecisionTree": DecisionTreeClassifier(max_depth=20, random_state=42),
+        "RandomForest": RandomForestClassifier(n_estimators=100, max_depth=20, n_jobs=-1, random_state=42),
+        "AdaBoost": AdaBoostClassifier(n_estimators=100, random_state=42),
+        "MLPClassifier": MLPClassifier(hidden_layer_sizes=(128, 128), max_iter=50, early_stopping=True, n_iter_no_change=5, random_state=42),
+        "LightGBM": LGBMClassifier(n_estimators=200, n_jobs=-1, random_state=42)
+    }
