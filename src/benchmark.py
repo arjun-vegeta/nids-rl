@@ -122,3 +122,49 @@ if __name__ == "__main__":
         "MLPClassifier": MLPClassifier(hidden_layer_sizes=(128, 128), max_iter=50, early_stopping=True, n_iter_no_change=5, random_state=42),
         "LightGBM": LGBMClassifier(n_estimators=200, n_jobs=-1, random_state=42)
     }
+
+    # --- 5. Training and Evaluation Loop ---
+    for model_name, model in models.items():
+        print(f"\n" + "="*50)
+        print(f"--- Training {model_name} ---")
+        
+        # --- NEW: Create a dedicated folder for this model ---
+        model_output_dir = os.path.join(parent_output_dir, model_name)
+        os.makedirs(model_output_dir, exist_ok=True)
+        
+        start_time = time.time()
+        
+        # Train the model
+        model.fit(X_train, y_train)
+        
+        train_time = time.time() - start_time
+        print(f"Training finished in {train_time:.2f} seconds.")
+
+        print(f"--- Evaluating {model_name} ---")
+        # Evaluate the model
+        y_pred = model.predict(X_test)
+        
+        # Calculate and print metrics
+        accuracy = accuracy_score(y_test, y_pred)
+        report_dict = classification_report(y_test, y_pred, target_names=class_names, output_dict=True, zero_division=0)
+        report_str = classification_report(y_test, y_pred, target_names=class_names, digits=3, zero_division=0)
+        cm = confusion_matrix(y_test, y_pred)
+        
+        print(f"Accuracy: {accuracy:.4f}")
+        print("Classification Report:")
+        print(report_str)
+        
+        # --- NEW: Save the classification report to the model's folder ---
+        report_filename = os.path.join(model_output_dir, 'classification_report.txt')
+        with open(report_filename, 'w') as f:
+            f.write(f"Model: {model_name}\n")
+            f.write(f"Accuracy: {accuracy:.4f}\n\n")
+            f.write("Classification Report:\n")
+            f.write(report_str)
+        print(f"Classification report saved to {report_filename}")
+        
+        # --- NEW: Pass the model-specific directory to the plotting functions ---
+        save_confusion_matrix(y_test, y_pred, model_name, class_names, model_output_dir)
+        save_metrics_barchart(report_dict, model_name, model_output_dir)
+        save_fpr_barchart(cm, model_name, class_names, model_output_dir)
+        print(f"Evaluation plots for {model_name} saved to {model_output_dir}")
