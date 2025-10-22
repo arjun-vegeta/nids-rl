@@ -168,3 +168,22 @@ if __name__ == "__main__":
         save_metrics_barchart(report_dict, model_name, model_output_dir)
         save_fpr_barchart(cm, model_name, class_names, model_output_dir)
         print(f"Evaluation plots for {model_name} saved to {model_output_dir}")
+
+    # --- 6. Save Test Set Distribution (Once) ---
+    print("\n" + "="*50)
+    print("--- Saving Test Set Distribution ---")
+    class_counts = pd.Series(y_test).map(rev_label_mapping).value_counts()
+    plt.figure(figsize=(18, 7))
+    sns.barplot(x=class_counts.index, y=class_counts.values, palette='plasma')
+    plt.title('Test Set Class Distribution', fontsize=20)
+    plt.xlabel('Class', fontsize=15)
+    plt.ylabel('Number of Samples', fontsize=15)
+    plt.xticks(rotation=45, ha='right')
+    plt.yscale('log')
+    plt.tight_layout()
+    # Save the general test set plot to the parent timestamped folder
+    plt.savefig(os.path.join(parent_output_dir, 'test_set_distribution.png'))
+    plt.close()
+    print(f"Saved test_set_distribution.png to {parent_output_dir}")
+
+    print("\n--- Benchmark Complete ---")
